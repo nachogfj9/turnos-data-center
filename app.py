@@ -10,7 +10,7 @@ from PIL import Image
 from collections import defaultdict
 import itertools
 import ast  
-from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
+
 
 ###############################################################################
 # CONFIGURACIONES POR DEFECTO

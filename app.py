@@ -10,6 +10,7 @@ from PIL import Image
 from collections import defaultdict
 import itertools
 import ast  
+from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 
 ###############################################################################
 # CONFIGURACIONES POR DEFECTO
@@ -560,6 +561,51 @@ def generar_calendario_anual_grupos_mixtos(file, anio=2025, num_bloques=5, distr
     df_turnos_anual = optimizar_reten_semanal(df_turnos_anual)
     return df_turnos_anual, df_grupos_anual
 
+###############################################################################
+# 4. LÓGICA DE INCORPORACIÓN
+###############################################################################
+def incorporar_tecnico_en_mayo(df_turnos, df_parejas, nuevo_tecnico, fecha_incorporacion):
+    # Asegurarse de que el técnico no existe
+    if nuevo_tecnico in df_turnos.columns:
+        st.warning(f"{nuevo_tecnico} ya existe en el calendario.")
+        return df_turnos
+
+    df = df_turnos.copy()
+    df[nuevo_tecnico] = ""  # Crear la columna vacía
+
+    # Buscar la fecha de inicio
+    fecha_inicio = pd.to_datetime(fecha_incorporacion)
+    idx_inicio = df[df["Fecha"] >= fecha_inicio].index
+
+    # Buscar un grupo existente al que agregarlo (usamos el de ese bloque)
+    bloque = df.loc[idx_inicio[0], "Bloque"]
+    grupos_en_bloque = df_parejas[df_parejas["Bloque"] == bloque]
+    
+    if grupos_en_bloque.empty:
+        st.error("No se encontraron grupos en ese bloque.")
+        return df
+
+    # Escoger el primer grupo con menos de 3 técnicos (por simplicidad)
+    for idx, row in grupos_en_bloque.iterrows():
+        if len(row["Tecnicos"]) < 3:
+            grupo_seleccionado = row["Tecnicos"]
+            tecnico_modelo = grupo_seleccionado[0]  # Copiamos sus turnos
+            break
+    else:
+        st.warning("Todos los grupos ya tienen 3 técnicos. Se agregará a uno igualmente.")
+        grupo_seleccionado = grupos_en_bloque.iloc[0]["Tecnicos"]
+        tecnico_modelo = grupo_seleccionado[0]
+
+    # Copiar turnos del técnico modelo desde la fecha de incorporación
+    df.loc[idx_inicio, nuevo_tecnico] = df.loc[idx_inicio, tecnico_modelo].values
+
+    # Actualizar df_parejas también
+    for i, row in df_parejas.iterrows():
+        if row["Bloque"] == bloque and tecnico_modelo in row["Tecnicos"]:
+            df_parejas.at[i, "Tecnicos"] = row["Tecnicos"] + [nuevo_tecnico]
+            break
+
+    return df
 
 ###############################################################################
 # 4. LÓGICA DE BAJA
@@ -705,6 +751,84 @@ def parse_shift_and_coverage(turno_str):
     base = shift_str.split(" ")[0]
     return base, covering, needs_support
 
+def mostrar_calendario_mensual_editable(df, selected_month):
+    config = get_config()
+    df = df.copy()
+    df["Fecha"] = pd.to_datetime(df["Fecha"])
+    df["Day"] = df["Fecha"].dt.day
+    df_month = df[df["Mes"].str.lower() == selected_month.lower()].copy()
+    if df_month.empty:
+        st.warning(f"No hay datos para el mes de {selected_month.capitalize()}.")
+        return
+    day_map = dict(zip(df_month["Day"], df_month["Día Corto"]))
+    st.markdown(f"""
+        <div style="background-color: #FF4B00;
+                    padding: 10px;
+                    border-radius: 5px;
+                    margin-bottom: 20px;">
+            <h2 style="text-align: center; color: white;">
+                Calendario de {selected_month.capitalize()}
+            </h2>
+        </div>
+    """, unsafe_allow_html=True)
+    id_cols = ["Fecha", "Día", "Mes", "Día Corto", "Bloque", "Day", "MesNum"]
+    tech_cols = [col for col in df.columns if col not in id_cols]
+    days_in_month = sorted(df_month["Day"].unique())
+    data = []
+    for tech in tech_cols:
+        row_data = {"Técnico": tech}
+        for day in days_in_month:
+            day_data = df_month[df_month["Day"] == day][tech].iloc[0] if any(df_month["Day"] == day) else ""
+            row_data[str(day)] = day_data
+        data.append(row_data)
+    calendar_df = pd.DataFrame(data)
+    calendar_df.set_index("Técnico", inplace=True)
+    def style_func(val, day_of_week):
+        return color_cell(val, day_of_week)
+    styles = []
+    for col in calendar_df.columns:
+        day_of_week = day_map.get(int(col), "")
+        styles.append({
+            'selector': f'td:nth-child({list(calendar_df.columns).index(col) + 1})',
+            'props': [('background-color', style_func(calendar_df[col].iloc[0], day_of_week))]
+        })
+    
+    st.write("### Calendario Mensual (Turnos)")
+    editable_calendar_df = calendar_df.reset_index()
+    edited_df = st.data_editor(
+        editable_calendar_df,
+        height=550,
+        use_container_width=True,
+        num_rows="fixed",
+        column_config={
+            col: st.column_config.TextColumn(width="small") for col in editable_calendar_df.columns if col != "Técnico"
+        }
+    )
+    # Si necesitas seguir usando el DataFrame editado:
+    edited_df.set_index("Técnico", inplace=True)
+
+    df_melt = df_month.melt(id_vars=id_cols, value_vars=tech_cols, 
+                           var_name="Técnico", value_name="Turno")
+    df_melt[["Shift", "CoveringBaja", "NeedsSupport"]] = df_melt["Turno"].apply(lambda x: pd.Series(parse_shift_and_coverage(x)))
+    df_counts = df_melt.groupby(["Técnico", "Shift", "CoveringBaja", "NeedsSupport"]).size().reset_index(name="Cantidad")
+    df_counts["TurnoCompleto"] = df_counts.apply(lambda row: f"{row['Shift']} (Cubriendo)" if row["CoveringBaja"] else row["Shift"], axis=1)
+    df_counts_pivot = df_counts.pivot_table(
+        index="Técnico",
+        columns="TurnoCompleto",
+        values="Cantidad",
+        fill_value=0
+    ).reset_index()
+    st.write("### Resumen de Turnos (Mensual)")
+    st.dataframe(df_counts_pivot, height=200)
+    df_melt["HorasExtras"] = df_melt.apply(
+        lambda r: config["shift_hours"].get(r["Shift"], 0) if r["CoveringBaja"] else 0,
+        axis=1
+    )
+    df_extras = df_melt.groupby("Técnico")["HorasExtras"].sum().reset_index()
+    df_extras.columns = ["Técnico", "Horas Extras (Baja)"]
+    st.write("### Horas Extras (cubrimiento de bajas) - Mensual")
+    st.dataframe(df_extras, height=200)
+
 def mostrar_calendario_mensual(df, selected_month):
     config = get_config()
     df = df.copy()
@@ -823,6 +947,72 @@ def mostrar_resumen_anual_horas_sep_cobertura(df):
             return 'background-color: lightgreen; color: black; font-weight: bold'
     styled_df = df_resumen.style.applymap(color_hours, subset=["TotalHoras"])
     st.write("### Resumen Anual de Horas (Separando Cobertura)")
+    st.dataframe(styled_df, height=300)
+
+from datetime import datetime
+
+def mostrar_resumen_hasta_hoy(df):
+    config = get_config()
+    hoy = pd.Timestamp(datetime.today().date())
+    fecha_str = hoy.strftime("%d/%m/%Y")
+
+    id_cols = ["Fecha", "Día", "Mes", "Día Corto", "Bloque", "MesNum", "Day"]
+    if "Day" not in df.columns:
+        df["Day"] = df["Fecha"].dt.day
+    tech_cols = [c for c in df.columns if c not in id_cols]
+
+    df_filtrado = df[df["Fecha"] <= hoy]
+
+    df_melt = df_filtrado.melt(id_vars=id_cols, value_vars=tech_cols, var_name="Técnico", value_name="Turno")
+    df_melt[["Shift", "CoveringBaja", "NeedsSupport"]] = df_melt["Turno"].apply(lambda x: pd.Series(parse_shift_and_coverage(x)))
+    
+    df_counts = df_melt.groupby(["Técnico", "Shift"]).size().reset_index(name="Cantidad de Turnos")
+    df_counts_pivot = df_counts.pivot(index="Técnico", columns="Shift", values="Cantidad de Turnos").fillna(0)
+
+    st.write(f"### 📊 Resumen de Turnos (Acumulado hasta {fecha_str})")
+    st.dataframe(df_counts_pivot, height=250)
+
+    df_melt["HorasExtras"] = df_melt.apply(
+        lambda row: config["shift_hours"].get(row["Shift"], 0) if row["CoveringBaja"] else 0,
+        axis=1
+    )
+    df_extras = df_melt.groupby("Técnico")["HorasExtras"].sum().reset_index()
+    df_extras.columns = ["Técnico", "Horas Extras Acumuladas"]
+    st.write(f"### ⏱️ Horas Extras (Baja/Refuerzo) hasta {fecha_str}")
+    st.dataframe(df_extras, height=250)
+
+def mostrar_resumen_hasta_hoy_horas_sep(df):
+    config = get_config()
+    hoy = pd.Timestamp(datetime.today().date())
+    fecha_str = hoy.strftime("%d/%m/%Y")
+
+    id_cols = ["Fecha", "Día", "Mes", "Día Corto", "Bloque", "MesNum", "Day"]
+    if "Day" not in df.columns:
+        df["Day"] = df["Fecha"].dt.day
+    df_filtrado = df[df["Fecha"] <= hoy]
+    tech_cols = [c for c in df.columns if c not in id_cols]
+
+    df_melt = df_filtrado.melt(id_vars=id_cols, value_vars=tech_cols, var_name="Técnico", value_name="Turno")
+    df_melt[["Shift", "CoveringBaja", "NeedsSupport"]] = df_melt["Turno"].apply(lambda x: pd.Series(parse_shift_and_coverage(x)))
+    df_melt["HorasTurno"] = df_melt["Shift"].apply(lambda x: config["shift_hours"].get(x, 0) if x else 0)
+    df_melt["HorasCobertura"] = df_melt.apply(lambda r: r["HorasTurno"] if r["CoveringBaja"] else 0, axis=1)
+    df_melt["HorasNormales"] = df_melt.apply(lambda r: r["HorasTurno"] if not r["CoveringBaja"] else 0, axis=1)
+
+    df_resumen = df_melt.groupby("Técnico").agg(
+        HorasNormales=("HorasNormales", "sum"),
+        HorasCobertura=("HorasCobertura", "sum")
+    ).reset_index()
+    df_resumen["TotalHoras"] = df_resumen["HorasNormales"] + df_resumen["HorasCobertura"]
+
+    max_hours = config["max_hours_year"]
+    def color_hours(val):
+        if val >= max_hours:
+            return 'background-color: #FF4B00; color: white; font-weight: bold'
+        else:
+            return 'background-color: lightgreen; color: black; font-weight: bold'
+
+    styled_df = df_resumen.style.applymap(color_hours, subset=["TotalHoras"])
+    st.write(f"### 📈 Resumen de Horas (hasta {fecha_str})")
     st.dataframe(styled_df, height=300)
 
 ###############################################################################
@@ -1172,7 +1362,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
     st.markdown("""
-    <h1>Gestión de Turnos con IA</h1>
+    <h1>Gestión de Turnos Automatizada</h1>
     <h3>Optimiza la asignación de turnos de forma automática y sencilla.</h3>
     """, unsafe_allow_html=True)
     tabs = st.tabs(["Inicio", "Calendario y Bajas", "Parejas Generadas", "Configuraciones Avanzadas"])
@@ -1183,9 +1373,9 @@ def main():
 
         ## Funcionalidades Principales
         - **Generación de Calendario Anual:** Crea un calendario de turnos para todo el año, con una visualización mensual que facilita la planificación.
-        - **Gestión de Bajas:** Administra las ausencias de los técnicos. La aplicación distingue entre bajas cortas (≤7 días) y bajas largas (>7 días), aplicando reglas específicas en cada caso.
+        - **Gestión de Bajas:** Administra las ausencias de los técnicos. Puedes seleccionar el técnico que estará de baja, la fecha de inicio y la duración de la ausencia. La aplicación se encargará de redistribuir los turnos automáticamente.
         - **Resumen de Turnos y Horas:** Obtén informes detallados de turnos asignados y horas trabajadas, tanto a nivel mensual como anual.
-        - **Emparejamiento Inteligente de Técnicos:** Se generan automáticamente emparejamientos de técnicos basados en sus habilidades, organizados en bloques para maximizar la complementariedad y eficiencia.
+        - **Emparejamiento Inteligente de Técnicos:** Se generan automáticamente emparejamientos de técnicos basados en sus habilidades, organizados en bloques para maximizar la complementariedad y eficiencia. Se puede seleccionar las habilidades más importantes.
         - **Configuración Avanzada:** Personaliza parámetros clave, como la importancia de cada tipo de habilidad, patrones de turnos, y otros ajustes relevantes.
 
         ## Pasos para Empezar
@@ -1314,7 +1504,8 @@ def main():
             df = st.session_state.df_turnos
             meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
             if "current_month_index" not in st.session_state:
-                st.session_state.current_month_index = 0
+                hoy = datetime.today()
+                st.session_state.current_month_index = hoy.month - 1  # mes actual (0 = enero, 11 = diciembre)
             col1, col2, col3 = st.columns([1,2,1])
             with col1:
                 if st.button("◀️", key="month_prev"):
@@ -1331,6 +1522,79 @@ def main():
             st.markdown("---")
             mostrar_resumen_anual_horas_sep_cobertura(df)
             st.markdown("---")
+            mostrar_resumen_hasta_hoy(df)
+            mostrar_resumen_hasta_hoy_horas_sep(df)
+            st.markdown("---")
+            with st.expander("🧮 Editor manual estilo calendario mensual"):
+                df_mes = df[df["Mes"].str.lower() == current_month.lower()].copy()
+                df_mes["Day"] = df_mes["Fecha"].dt.day
+
+                dias_mes = sorted(df_mes["Day"].unique())
+                id_cols = ["Fecha", "Día", "Mes", "Día Corto", "Bloque", "MesNum", "Day"]
+                tech_cols = [c for c in df_mes.columns if c not in id_cols]
+
+                opciones_turno = ["", "M", "T", "N", "R", "V", "D", "M+T", "T+N"]
+
+                # Construir tabla calendario estilo horizontal (técnico x día)
+                data = []
+                for tecnico in tech_cols:
+                    fila = {"Técnico": tecnico}
+                    for dia in dias_mes:
+                        turno = df_mes[df_mes["Day"] == dia][tecnico].values[0]
+                        fila[str(dia)] = turno
+                    data.append(fila)
+
+                df_editor = pd.DataFrame(data)
+                df_editor = df_editor.set_index("Técnico").reset_index()
+
+                # Editor tipo Excel horizontal
+                st.markdown("🎨 **Edita turnos directamente en la tabla** (como Excel):")
+                edited_df = st.data_editor(
+                    df_editor,
+                    num_rows="fixed",
+                    use_container_width=True,
+                    height=550,
+                    column_config={
+                        col: st.column_config.SelectboxColumn(
+                            label=col,
+                            options=opciones_turno,
+                            width="small"
+                        ) for col in df_editor.columns if col != "Técnico"
+                    }
+                )
+
+                # Guardar cambios en el DataFrame original
+                if st.button("💾 Guardar cambios del mes (manual)"):
+                    for _, row in edited_df.iterrows():
+                        tecnico = row["Técnico"]
+                        for dia in dias_mes:
+                            df_mes.loc[df_mes["Day"] == dia, tecnico] = row[str(dia)]
+
+                    df.update(df_mes)
+                    st.session_state.df_turnos = df
+                    guardar_calendario_local(df, st.session_state.df_parejas)
+                    st.success(f"Cambios guardados para {current_month.capitalize()}.")
+                    raise st.rerun()
+
+
+
+
+            with st.expander("➕ Incorporar técnico nuevo"):
+                nuevo_tecnico = st.text_input("Nombre del nuevo técnico")
+                fecha_inicio_nuevo = st.date_input("Fecha de incorporación", datetime(2025, 5, 1))
+
+                if st.button("Incorporar Técnico"):
+                    df_nuevo = incorporar_tecnico_en_mayo(
+                        st.session_state.df_turnos,
+                        st.session_state.df_parejas,
+                        nuevo_tecnico,
+                        fecha_inicio_nuevo
+                        )
+                    st.session_state.df_turnos = df_nuevo
+                    guardar_calendario_local(df_nuevo, st.session_state.df_parejas)
+                    st.success(f"Técnico {nuevo_tecnico} incorporado correctamente.")
+                    raise st.runtime.scriptrunner.script_runner.RerunException(st.runtime.scriptrunner.script_runner.RerunData(None))
+
             st.subheader("Aplicar Baja")
             id_cols = ["Fecha", "Día", "Mes", "Día Corto", "Bloque", "Day", "MesNum"]
             tech_cols = [c for c in df.columns if c not in id_cols]

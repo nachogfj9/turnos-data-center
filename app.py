@@ -10,8 +10,6 @@ from PIL import Image
 from collections import defaultdict
 import itertools
 import ast  
-
-
 ###############################################################################
 # CONFIGURACIONES POR DEFECTO
 ###############################################################################

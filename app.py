@@ -363,7 +363,7 @@ def optimizar_reten_semanal(df_turnos):
     return df
 
 
-def generar_calendario_anual_grupos(file, anio=2025, num_bloques=5, penalizar_repetidas=True, num_tecnicos=10, techs_per_shift=2):
+def generar_calendario_anual_grupos(file, anio=2025, num_bloques=2, penalizar_repetidas=True, num_tecnicos=10, techs_per_shift=2):
     config = get_config()
     df_ponderado, skill_to_weight = cargar_y_preparar_matriz(file, num_tecnicos=num_tecnicos)
     
@@ -474,7 +474,7 @@ def seleccionar_mejor_grupo(tecnicos_disponibles, tam_grupo, matriz_compl, df_po
     
     return mejor_grupo
 
-def generar_calendario_anual_grupos_mixtos(file, anio=2025, num_bloques=5, distribucion=None, num_tecnicos=10):
+def generar_calendario_anual_grupos_mixtos(file, anio=2025, num_bloques=2, distribucion=None, num_tecnicos=10):
     config = get_config()
     df_ponderado, skill_to_weight = cargar_y_preparar_matriz(file, num_tecnicos=num_tecnicos)
     
@@ -1446,7 +1446,7 @@ def main():
             uploaded_file = st.file_uploader("Sube la matriz de polivalencia (Excel)", type=["xlsx"])
             anio = st.number_input("Año para el calendario", value=2025, step=1)
             num_tecnicos = st.number_input("Número total de técnicos", min_value=1, value=10, step=1)
-            num_bloques = st.number_input("Número de cambios de grupos (bloques)", value=5, step=1)
+            num_bloques = st.number_input("Número de cambios de grupos (bloques)", value=2, step=1)
             distribucion = calcular_distribucion_optima(num_tecnicos)
             mostrar_explicacion_distribucion(distribucion, num_tecnicos)
             usar_recomendacion = st.checkbox("Usar distribución recomendada", value=True)

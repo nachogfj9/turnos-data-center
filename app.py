@@ -1370,10 +1370,12 @@ def main():
        Esta aplicación ha sido diseñada para ayudarte a organizar y optimizar la asignación de turnos en tu empresa de forma automática y sencilla. A continuación, te explicamos paso a paso cómo funciona y cómo puedes empezar:
 
         ## Funcionalidades Principales
-        - **Generación de Calendario Anual:** Crea un calendario de turnos para todo el año, con una visualización mensual que facilita la planificación.
-        - **Gestión de Bajas:** Administra las ausencias de los técnicos. Puedes seleccionar el técnico que estará de baja, la fecha de inicio y la duración de la ausencia. La aplicación se encargará de redistribuir los turnos automáticamente.
-        - **Resumen de Turnos y Horas:** Obtén informes detallados de turnos asignados y horas trabajadas, tanto a nivel mensual como anual.
         - **Emparejamiento Inteligente de Técnicos:** Se generan automáticamente emparejamientos de técnicos basados en sus habilidades, organizados en bloques para maximizar la complementariedad y eficiencia. Se puede seleccionar las habilidades más importantes.
+        - **Generación de Calendario Anual:** Crea un calendario de turnos para todo el año, con una visualización mensual que facilita la planificación.
+        - **Calendario Moficiable**: Una vez creado el calendario, es posible realizar las modificaciones que se deseen sobre el mismo en el apartado pertinente.
+        - **Incorporaciones:** Permite incorporar técnicos durante el año e incorporarlo a los turnos sin modificar el del resto.
+        - **Gestión de Bajas:** Administra las ausencias de los técnicos. Puedes seleccionar el técnico que estará de baja, la fecha de inicio y la duración de la ausencia. La aplicación se encargará de redistribuir los turnos automáticamente.
+        - **Resumen de Turnos y Horas:** Obtén informes detallados de turnos asignados y horas trabajadas, a nivel mensual, anual yt acumulado hasta la fecha.
         - **Configuración Avanzada:** Personaliza parámetros clave, como la importancia de cada tipo de habilidad, patrones de turnos, y otros ajustes relevantes.
 
         ## Pasos para Empezar

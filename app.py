@@ -10,7 +10,6 @@ from PIL import Image
 from collections import defaultdict
 import itertools
 import ast  
-from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 
 ###############################################################################
 # CONFIGURACIONES POR DEFECTO
@@ -962,6 +961,10 @@ def mostrar_resumen_hasta_hoy(df):
     tech_cols = [c for c in df.columns if c not in id_cols]
 
     df_filtrado = df[df["Fecha"] <= hoy]
+    
+    if df[df["Fecha"] <= hoy].empty:
+        st.warning("El calendario comienza en el futuro. No hay datos acumulados hasta hoy.")
+        return
 
     df_melt = df_filtrado.melt(id_vars=id_cols, value_vars=tech_cols, var_name="Técnico", value_name="Turno")
     df_melt[["Shift", "CoveringBaja", "NeedsSupport"]] = df_melt["Turno"].apply(lambda x: pd.Series(parse_shift_and_coverage(x)))
@@ -992,6 +995,10 @@ def mostrar_resumen_hasta_hoy_horas_sep(df):
     df_filtrado = df[df["Fecha"] <= hoy]
     tech_cols = [c for c in df.columns if c not in id_cols]
 
+    if df[df["Fecha"] <= hoy].empty:
+        st.warning("El calendario comienza en el futuro. No hay datos acumulados hasta hoy.")
+        return
+    
     df_melt = df_filtrado.melt(id_vars=id_cols, value_vars=tech_cols, var_name="Técnico", value_name="Turno")
     df_melt[["Shift", "CoveringBaja", "NeedsSupport"]] = df_melt["Turno"].apply(lambda x: pd.Series(parse_shift_and_coverage(x)))
     df_melt["HorasTurno"] = df_melt["Shift"].apply(lambda x: config["shift_hours"].get(x, 0) if x else 0)

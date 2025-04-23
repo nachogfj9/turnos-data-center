@@ -1330,7 +1330,8 @@ def main():
     config = get_config()
     auth.auth_gate(config)
  
-    st.set_page_config(page_title="SERVEO Automatización de Turnos", layout="wide")
+    st.set_page_config(
+    page_title="Guaxen", layout="wide")
     init_config()
     config = get_config()
     auth.auth_gate(config)
@@ -1369,7 +1370,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
     st.markdown("""
-    <h1>Gestión de Turnos Automatizada</h1>
+    <h1>Guaxen: Gestión de Turnos Automatizada</h1>
     <h3>Optimiza la asignación de turnos de forma automática y sencilla.</h3>
     """, unsafe_allow_html=True)
     tabs = st.tabs(["Inicio", "Calendario y Bajas", "Parejas Generadas", "Configuraciones Avanzadas"])

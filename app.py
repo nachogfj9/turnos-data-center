@@ -1671,7 +1671,7 @@ def main():
         border-radius: 12px;
         box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.15);
         z-index: 9999;
-        font-size: 0.85rem;
+        font-size: 1.25rem;
         line-height: 1.4;
     }
     .creator a {
@@ -1681,9 +1681,9 @@ def main():
     </style>
 
     <div class="creator">
-        <p><strong>Jose Ignacio Guajardo-Fajardo Jiménez</strong></p>
-        <p>Email: <a href="mailto:nachogfj@gmail.com">nachogfj@gmail.com</a></p>
-        <p><a href="https://www.linkedin.com/in/joseignacioguajardo-fajardojiménez/" target="_blank">LinkedIn</a></p>
+        <p>Creado por: <strong>Jose Ignacio Guajardo-Fajardo Jiménez</strong></p>
+        <p>Email: <a href="mailto:nachogfj@gmail.com" style="color: white;">nachogfj@gmail.com</a></p>
+        <p>LinkedIn: <a href="https://www.linkedin.com/in/joseignacioguajardo-fajardojiménez/" target="_blank" style="color: white;">Jose Ignacio Guajardo-Fajardo Jiménez</a></p>
     </div>
     """, unsafe_allow_html=True)
 

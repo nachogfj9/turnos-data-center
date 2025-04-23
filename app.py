@@ -1659,6 +1659,14 @@ def main():
     with tabs[3]:
         configuraciones_avanzadas_tab()
 
+    st.markdown("""
+    <div class="creator">
+        <p>Creado por: <strong>Jose Ignacio Guajardo-Fajardo Jiménez</strong></p>
+        <p>Email: <a href="mailto:nachogfj@gmail.com" style="color: white;">nachogfj@gmail.com</a></p>
+        <p>LinkedIn: <a href="https://www.linkedin.com/in/joseignacioguajardo-fajardojiménez/" target="_blank" style="color: white;">Jose Ignacio Guajardo-Fajardo Jiménez</a></p>
+    </div>
+    """, unsafe_allow_html=True)
+
 def calcular_distribucion_optima(num_tecnicos):
     """
     Calcula la distribución óptima en 5 grupos.

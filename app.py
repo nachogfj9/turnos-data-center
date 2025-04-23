@@ -1330,8 +1330,15 @@ def main():
     config = get_config()
     auth.auth_gate(config)
  
-    st.set_page_config(
-    page_title="Guaxen", layout="wide")
+    st.set_page_config(page_title="Guaxen", layout="wide")
+    st.markdown(
+    """
+    <script>
+      document.title = "Guaxen";       // aquí pones exactamente lo que quieras
+    </script>
+    """,
+    unsafe_allow_html=True
+)
     init_config()
     config = get_config()
     auth.auth_gate(config)

@@ -1671,7 +1671,7 @@ def main():
         border-radius: 12px;
         box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.15);
         z-index: 9999;
-        font-size: 1.25rem;
+        font-size: 0.95rem;
         line-height: 1.4;
     }
     .creator a {

@@ -1660,12 +1660,33 @@ def main():
         configuraciones_avanzadas_tab()
 
     st.markdown("""
+    <style>
+    .creator {
+        position: fixed;
+        bottom: 15px;
+        right: 15px;
+        background-color: #FF4B00;
+        color: white;
+        padding: 0.75rem 1.25rem;
+        border-radius: 12px;
+        box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.15);
+        z-index: 9999;
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+    .creator a {
+        color: white;
+        text-decoration: underline;
+    }
+    </style>
+
     <div class="creator">
-        <p>Creado por: <strong>Jose Ignacio Guajardo-Fajardo Jiménez</strong></p>
-        <p>Email: <a href="mailto:nachogfj@gmail.com" style="color: white;">nachogfj@gmail.com</a></p>
-        <p>LinkedIn: <a href="https://www.linkedin.com/in/joseignacioguajardo-fajardojiménez/" target="_blank" style="color: white;">Jose Ignacio Guajardo-Fajardo Jiménez</a></p>
+        <p><strong>Jose Ignacio Guajardo-Fajardo Jiménez</strong></p>
+        <p>Email: <a href="mailto:nachogfj@gmail.com">nachogfj@gmail.com</a></p>
+        <p><a href="https://www.linkedin.com/in/joseignacioguajardo-fajardojiménez/" target="_blank">LinkedIn</a></p>
     </div>
     """, unsafe_allow_html=True)
+
 
 def calcular_distribucion_optima(num_tecnicos):
     """

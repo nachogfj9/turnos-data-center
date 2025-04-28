@@ -670,7 +670,7 @@ def aplicar_baja(df_turnos, tecnico_baja, fecha_inicio_baja, fecha_fin_baja, ret
                  if turno_base in ["N", "T+N", "M+T", "M", "T"]:
                     df_turnos.at[idx, ret_seleccionado] = f"{turno_base} (H.EXT)"
             else:
-                if turno_base in ["N", "T+N", "M+T"]:
+                if turno_base in ["T","N", "T+N", "M+T"]:
                     df_turnos.at[idx, ret_seleccionado] = f"{turno_base} (H.EXT)"
     
     return df_turnos

@@ -123,32 +123,32 @@ Fecha,Día,Día Corto,MesNum,Mes,MAD1SOFT02,MAD1SOFT09,MAD1SOFT03,MAD1SOFT10,MAD
 2025-05-02,Friday,Fri,5,mayo,N,N,R,V,V,V,M,M,T,T,1.0,2
 2025-05-03,Saturday,Sat,5,mayo,T+N,T+N,R,V,M+T,M+T,D,D,D,D,1.0,3
 2025-05-04,Sunday,Sun,5,mayo,T+N,T+N,R,V,M+T,M+T,D,D,D,D,1.0,4
-2025-05-05,Monday,Mon,5,mayo,R,V,V,V,M,M,T,T,N,N,1.0,5
-2025-05-06,Tuesday,Tue,5,mayo,R,V,V,V,M,M,T,T,N,N,1.0,6
-2025-05-07,Wednesday,Wed,5,mayo,R,V,V,V,M,M,T,T,N,N,1.0,7
-2025-05-08,Thursday,Thu,5,mayo,R,V,V,V,M,M,T,T,N,N,1.0,8
-2025-05-09,Friday,Fri,5,mayo,R,V,V,V,M,M,T,T,N,N,1.0,9
-2025-05-10,Saturday,Sat,5,mayo,R,V,M+T,M+T,D,D,D,D,T+N,T+N,1.0,10
-2025-05-11,Sunday,Sun,5,mayo,R,V,M+T,M+T,D,D,D,D,T+N,T+N,1.0,11
-2025-05-12,Monday,Mon,5,mayo,V,V,M,M,T,T,N,N,R,V,1.0,12
-2025-05-13,Tuesday,Tue,5,mayo,V,V,M,M,T,T,N,N,R,V,1.0,13
-2025-05-14,Wednesday,Wed,5,mayo,V,V,M,M,T,T,N,N,R,V,1.0,14
-2025-05-15,Thursday,Thu,5,mayo,V,V,M,M,T,T,N,N,R,V,1.0,15
-2025-05-16,Friday,Fri,5,mayo,V,V,M,M,T,T,N,N,R,V,1.0,16
-2025-05-17,Saturday,Sat,5,mayo,M+T,M+T,D,D,D,D,T+N,T+N,R,V,1.0,17
-2025-05-18,Sunday,Sun,5,mayo,M+T,M+T,D,D,D,D,T+N,T+N,R,V,1.0,18
-2025-05-19,Monday,Mon,5,mayo,M,M,T,T,N,N,R,V,V,V,1.0,19
-2025-05-20,Tuesday,Tue,5,mayo,M,M,T,T,N,N,R,V,V,V,1.0,20
-2025-05-21,Wednesday,Wed,5,mayo,M,M,T,T,N,N,R,V,V,V,1.0,21
-2025-05-22,Thursday,Thu,5,mayo,M,M,T,T,N,N,R,V,V,V,1.0,22
-2025-05-23,Friday,Fri,5,mayo,M,M,T,T,N,N,R,V,V,V,1.0,23
-2025-05-24,Saturday,Sat,5,mayo,D,D,D,D,T+N,T+N,R,V,M+T,M+T,1.0,24
-2025-05-25,Sunday,Sun,5,mayo,D,D,D,D,T+N,T+N,R,V,M+T,M+T,1.0,25
-2025-05-26,Monday,Mon,5,mayo,T,T,N,N,R,V,V,V,M,M,1.0,26
-2025-05-27,Tuesday,Tue,5,mayo,T,T,N,N,R,V,V,V,M,M,1.0,27
-2025-05-28,Wednesday,Wed,5,mayo,T,T,N,N,R,V,V,V,M,M,1.0,28
-2025-05-29,Thursday,Thu,5,mayo,T,T,N,N,R,V,V,V,M,M,1.0,29
-2025-05-30,Friday,Fri,5,mayo,T,T,N,N,R,V,V,V,M,M,1.0,30
+2025-05-05,Monday,Mon,5,mayo,R (BAJA),V,V,V,M,M,T,T,N,N,1.0,5
+2025-05-06,Tuesday,Tue,5,mayo,R (BAJA),V,V,V,M,M,T,T,N,N,1.0,6
+2025-05-07,Wednesday,Wed,5,mayo,R (BAJA),V,V,V,M,M,T,T,N,N,1.0,7
+2025-05-08,Thursday,Thu,5,mayo,R (BAJA),V,V,V,M,M,T,T,N,N,1.0,8
+2025-05-09,Friday,Fri,5,mayo,R (BAJA),V,V,V,M,M,T,T,N,N,1.0,9
+2025-05-10,Saturday,Sat,5,mayo,R (BAJA),V,M+T,M+T,D,D,D,D,T+N,T+N,1.0,10
+2025-05-11,Sunday,Sun,5,mayo,R (BAJA),V,M+T,M+T,D,D,D,D,T+N,T+N,1.0,11
+2025-05-12,Monday,Mon,5,mayo,V (BAJA),V,M,M,T,T,N,N,R,V,1.0,12
+2025-05-13,Tuesday,Tue,5,mayo,V (BAJA),V,M,M,T,T,N,N,R,V,1.0,13
+2025-05-14,Wednesday,Wed,5,mayo,V (BAJA),V,M,M,T,T,N,N,R,V,1.0,14
+2025-05-15,Thursday,Thu,5,mayo,V (BAJA),V,M,M,T,T,N,N,R,V,1.0,15
+2025-05-16,Friday,Fri,5,mayo,V (BAJA),V,M,M,T,T,N,N,R,V,1.0,16
+2025-05-17,Saturday,Sat,5,mayo,M+T (BAJA),M+T,D,D,D,D,T+N,T+N,M+T (H.EXT),V,1.0,17
+2025-05-18,Sunday,Sun,5,mayo,M+T (BAJA),M+T,D,D,D,D,T+N,T+N,M+T (H.EXT),V,1.0,18
+2025-05-19,Monday,Mon,5,mayo,M (BAJA),M,T,T,N,N,R,V,V,V,1.0,19
+2025-05-20,Tuesday,Tue,5,mayo,M (BAJA),M,T,T,N,N,R,V,V,V,1.0,20
+2025-05-21,Wednesday,Wed,5,mayo,M (BAJA),M,T,T,N,N,R,V,V,V,1.0,21
+2025-05-22,Thursday,Thu,5,mayo,M (BAJA),M,T,T,N,N,R,V,V,V,1.0,22
+2025-05-23,Friday,Fri,5,mayo,M (BAJA),M,T,T,N,N,R,V,V,V,1.0,23
+2025-05-24,Saturday,Sat,5,mayo,D (BAJA),D,D,D,T+N,T+N,R,V,M+T,M+T,1.0,24
+2025-05-25,Sunday,Sun,5,mayo,D (BAJA),D,D,D,T+N,T+N,R,V,M+T,M+T,1.0,25
+2025-05-26,Monday,Mon,5,mayo,T (BAJA),T,N,N,T (H.EXT),V,V,V,M,M,1.0,26
+2025-05-27,Tuesday,Tue,5,mayo,T (BAJA),T,N,N,T (H.EXT),V,V,V,M,M,1.0,27
+2025-05-28,Wednesday,Wed,5,mayo,T (BAJA),T,N,N,T (H.EXT),V,V,V,M,M,1.0,28
+2025-05-29,Thursday,Thu,5,mayo,T (BAJA),T,N,N,T (H.EXT),V,V,V,M,M,1.0,29
+2025-05-30,Friday,Fri,5,mayo,T (BAJA),T,N,N,T (H.EXT),V,V,V,M,M,1.0,30
 2025-05-31,Saturday,Sat,5,mayo,D,D,T+N,T+N,R,V,M+T,M+T,D,D,1.0,31
 2025-06-01,Sunday,Sun,6,junio,D,D,T+N,T+N,R,V,M+T,M+T,D,D,1.0,1
 2025-06-02,Monday,Mon,6,junio,N,N,R,V,V,V,M,M,T,T,1.0,2

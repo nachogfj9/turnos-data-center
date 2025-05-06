@@ -943,6 +943,16 @@ def mostrar_resumen_anual(df):
 
 
 def mostrar_resumen_anual_horas_sep_cobertura(df):
+    horas_turno_detalle = {
+    "M": {"diurnas": 8, "nocturnas": 0},
+    "T": {"diurnas": 7, "nocturnas": 1},
+    "N": {"diurnas": 0, "nocturnas": 8},
+    "M+T": {"diurnas": 12, "nocturnas": 0},
+    "T+N": {"diurnas": 4, "nocturnas": 8},
+    "R": {"diurnas": 0, "nocturnas": 0},
+    "V": {"diurnas": 0, "nocturnas": 0},
+    "D": {"diurnas": 0, "nocturnas": 0}
+    }
     config = get_config()
     id_cols = ["Fecha", "Día", "Mes", "Día Corto", "Bloque", "MesNum", "Day"]
     if "Day" not in df.columns:
@@ -951,20 +961,24 @@ def mostrar_resumen_anual_horas_sep_cobertura(df):
     df_melt = df.melt(id_vars=id_cols, value_vars=tech_cols, var_name="Técnico", value_name="Turno")
     df_melt[["Shift", "CoveringBaja", "NeedsSupport"]] = df_melt["Turno"].apply(lambda x: pd.Series(parse_shift_and_coverage(x)))
     df_melt["HorasTurno"] = df_melt["Shift"].apply(lambda x: config["shift_hours"].get(x, 0) if x else 0)
-    df_melt["HorasCobertura"] = df_melt.apply(lambda r: r["HorasTurno"] if r["CoveringBaja"] else 0, axis=1)
-    df_melt["HorasNormales"] = df_melt.apply(lambda r: r["HorasTurno"] if not r["CoveringBaja"] else 0, axis=1)
-    df_resumen = df_melt.groupby("Técnico").agg(
-        HorasNormales=("HorasNormales", "sum"),
-        HorasCobertura=("HorasCobertura", "sum")
-    ).reset_index()
-    df_resumen["TotalHoras"] = df_resumen["HorasNormales"] + df_resumen["HorasCobertura"]
+    df_melt["HorasDiurnas"] = df_melt.apply(lambda r: horas_turno_detalle.get(r["Shift"], {"diurnas": 0})["diurnas"] if not r["CoveringBaja"] else 0, axis=1)
+    df_melt["HorasNocturnas"] = df_melt.apply(lambda r: horas_turno_detalle.get(r["Shift"], {"nocturnas": 0})["nocturnas"] if not r["CoveringBaja"] else 0, axis=1)
+    df_melt["HorasExtrasDiurnas"] = df_melt.apply(lambda r: horas_turno_detalle.get(r["Shift"], {"diurnas": 0})["diurnas"] if r["CoveringBaja"] else 0, axis=1)
+    df_melt["HorasExtrasNocturnas"] = df_melt.apply(lambda r: horas_turno_detalle.get(r["Shift"], {"nocturnas": 0})["nocturnas"] if r["CoveringBaja"] else 0, axis=1)
+    df_final = df_melt.groupby("Técnico").agg({
+    "HorasDiurnas": "sum",
+    "HorasNocturnas": "sum",
+    "HorasExtrasDiurnas": "sum",
+    "HorasExtrasNocturnas": "sum"
+    }).reset_index()
+    df_final["TotalHoras"] = df_final[["HorasDiurnas", "HorasNocturnas", "HorasExtrasDiurnas", "HorasExtrasNocturnas"]].sum(axis=1)
     max_hours = config["max_hours_year"]
     def color_hours(val):
         if val >= max_hours:
             return 'background-color: #FF4B00; color: white; font-weight: bold'
         else:
             return 'background-color: lightgreen; color: black; font-weight: bold'
-    styled_df = df_resumen.style.applymap(color_hours, subset=["TotalHoras"])
+    styled_df = df_final.style.applymap(color_hours, subset=["TotalHoras"])
     st.write("### Resumen Anual de Horas (Separando Cobertura)")
     st.dataframe(styled_df, height=300)
 
@@ -1005,6 +1019,16 @@ def mostrar_resumen_hasta_hoy(df):
     st.dataframe(df_extras, height=250)
 
 def mostrar_resumen_hasta_hoy_horas_sep(df):
+    horas_turno_detalle = {
+    "M": {"diurnas": 8, "nocturnas": 0},
+    "T": {"diurnas": 7, "nocturnas": 1},
+    "N": {"diurnas": 0, "nocturnas": 8},
+    "M+T": {"diurnas": 12, "nocturnas": 0},
+    "T+N": {"diurnas": 4, "nocturnas": 8},
+    "R": {"diurnas": 0, "nocturnas": 0},
+    "V": {"diurnas": 0, "nocturnas": 0},
+    "D": {"diurnas": 0, "nocturnas": 0}
+    }
     config = get_config()
     hoy = pd.Timestamp(datetime.today().date())
     fecha_str = hoy.strftime("%d/%m/%Y")
@@ -1022,14 +1046,18 @@ def mostrar_resumen_hasta_hoy_horas_sep(df):
     df_melt = df_filtrado.melt(id_vars=id_cols, value_vars=tech_cols, var_name="Técnico", value_name="Turno")
     df_melt[["Shift", "CoveringBaja", "NeedsSupport"]] = df_melt["Turno"].apply(lambda x: pd.Series(parse_shift_and_coverage(x)))
     df_melt["HorasTurno"] = df_melt["Shift"].apply(lambda x: config["shift_hours"].get(x, 0) if x else 0)
-    df_melt["HorasCobertura"] = df_melt.apply(lambda r: r["HorasTurno"] if r["CoveringBaja"] else 0, axis=1)
-    df_melt["HorasNormales"] = df_melt.apply(lambda r: r["HorasTurno"] if not r["CoveringBaja"] else 0, axis=1)
+    df_melt["HorasDiurnas"] = df_melt.apply(lambda r: horas_turno_detalle.get(r["Shift"], {"diurnas": 0})["diurnas"] if not r["CoveringBaja"] else 0, axis=1)
+    df_melt["HorasNocturnas"] = df_melt.apply(lambda r: horas_turno_detalle.get(r["Shift"], {"nocturnas": 0})["nocturnas"] if not r["CoveringBaja"] else 0, axis=1)
+    df_melt["HorasExtrasDiurnas"] = df_melt.apply(lambda r: horas_turno_detalle.get(r["Shift"], {"diurnas": 0})["diurnas"] if r["CoveringBaja"] else 0, axis=1)
+    df_melt["HorasExtrasNocturnas"] = df_melt.apply(lambda r: horas_turno_detalle.get(r["Shift"], {"nocturnas": 0})["nocturnas"] if r["CoveringBaja"] else 0, axis=1)
 
-    df_resumen = df_melt.groupby("Técnico").agg(
-        HorasNormales=("HorasNormales", "sum"),
-        HorasCobertura=("HorasCobertura", "sum")
-    ).reset_index()
-    df_resumen["TotalHoras"] = df_resumen["HorasNormales"] + df_resumen["HorasCobertura"]
+    df_final = df_melt.groupby("Técnico").agg({
+    "HorasDiurnas": "sum",
+    "HorasNocturnas": "sum",
+    "HorasExtrasDiurnas": "sum",
+    "HorasExtrasNocturnas": "sum"
+    }).reset_index()
+    df_final["TotalHoras"] = df_final[["HorasDiurnas", "HorasNocturnas", "HorasExtrasDiurnas", "HorasExtrasNocturnas"]].sum(axis=1)
 
     max_hours = config["max_hours_year"]
     def color_hours(val):
@@ -1038,7 +1066,7 @@ def mostrar_resumen_hasta_hoy_horas_sep(df):
         else:
             return 'background-color: lightgreen; color: black; font-weight: bold'
 
-    styled_df = df_resumen.style.applymap(color_hours, subset=["TotalHoras"])
+    styled_df = df_final.style.applymap(color_hours, subset=["TotalHoras"])
     st.write(f"### 📈 Resumen de Horas (hasta {fecha_str})")
     st.dataframe(styled_df, height=300)
 

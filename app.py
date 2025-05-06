@@ -698,9 +698,10 @@ def aplicar_baja(df_turnos, tecnico_baja, fecha_inicio_baja, fecha_fin_baja, ret
 ###############################################################################
 # 4. LÓGICA DE REFUERZO
 ###############################################################################
-def aplicar_grupo_refuerzo(df_turnos, fecha_inicio, dias, turno_requerido, num_tecnicos):
+def aplicar_grupo_refuerzo(df_turnos, fecha_inicio, dias, turno_requerido, num_tecnicos, tecnicos_seleccionados=None):
     config = get_config()
     fecha_inicio_dt = datetime.strptime(fecha_inicio, "%d/%m/%Y")
+    
     for dia in range(dias):
         fecha_actual = fecha_inicio_dt + timedelta(days=dia)
         idx_fecha = df_turnos.index[df_turnos["Fecha"] == fecha_actual]
@@ -708,32 +709,37 @@ def aplicar_grupo_refuerzo(df_turnos, fecha_inicio, dias, turno_requerido, num_t
             continue
         idx_fecha = idx_fecha[0]
 
-        # Columnas identificadoras excluidas
-        cols_excluir = ["Fecha", "Día", "Mes", "Día Corto", "Bloque", "MesNum"]
-        tecnicos = [col for col in df_turnos.columns if col not in cols_excluir]
-
-        # Identificar técnicos disponibles en prioridad
-        disponibles_R = [tec for tec in tecnicos if clean_shift(df_turnos.at[idx_fecha, tec]) == "R"]
-        disponibles_VD = [tec for tec in tecnicos if clean_shift(df_turnos.at[idx_fecha, tec]) in ["V", "D"]]
-
-        tecnicos_asignados = []
-
-        # Asignar técnicos desde retén primero
-        for grupo in [disponibles_R, disponibles_VD]:
-            for tecnico in grupo:
-                if len(tecnicos_asignados) < num_tecnicos:
-                    df_turnos.at[idx_fecha, tecnico] = f"{turno_requerido} (REFUERZO)"
-                    tecnicos_asignados.append(tecnico)
-                else:
+        if tecnicos_seleccionados:
+            tecnicos_asignados = 0
+            for tec in tecnicos_seleccionados:
+                if clean_shift(df_turnos.at[idx_fecha, tec]) in ["R", "V", "D"]:
+                    df_turnos.at[idx_fecha, tec] = f"{turno_requerido} (REFUERZO)"
+                    tecnicos_asignados += 1
+                    if tecnicos_asignados >= num_tecnicos:
+                        break
+            if tecnicos_asignados < num_tecnicos:
+                st.warning(f"Solo se asignaron {tecnicos_asignados} refuerzos manuales el {fecha_actual.strftime('%d/%m/%Y')}.")
+        else:
+            # Lógica automática actual
+            cols_excluir = ["Fecha", "Día", "Mes", "Día Corto", "Bloque", "MesNum"]
+            tecnicos = [col for col in df_turnos.columns if col not in cols_excluir]
+            disponibles_R = [tec for tec in tecnicos if clean_shift(df_turnos.at[idx_fecha, tec]) == "R"]
+            disponibles_VD = [tec for tec in tecnicos if clean_shift(df_turnos.at[idx_fecha, tec]) in ["V", "D"]]
+            tecnicos_asignados = []
+            for grupo in [disponibles_R, disponibles_VD]:
+                for tecnico in grupo:
+                    if len(tecnicos_asignados) < num_tecnicos:
+                        df_turnos.at[idx_fecha, tecnico] = f"{turno_requerido} (REFUERZO)"
+                        tecnicos_asignados.append(tecnico)
+                    else:
+                        break
+                if len(tecnicos_asignados) >= num_tecnicos:
                     break
-            if len(tecnicos_asignados) >= num_tecnicos:
-                break
-
-        # Avisar si no hubo suficientes técnicos
-        if len(tecnicos_asignados) < num_tecnicos:
-            st.warning(f"No hay suficientes técnicos disponibles el {fecha_actual.strftime('%d/%m/%Y')}. Necesitabas {num_tecnicos}, pero solo asignaste {len(tecnicos_asignados)}.")
+            if len(tecnicos_asignados) < num_tecnicos:
+                st.warning(f"No hay suficientes técnicos disponibles el {fecha_actual.strftime('%d/%m/%Y')}.")
 
     return df_turnos
+
 
 ###############################################################################
 # 5. COLORES Y VISUALIZACIÓN
@@ -1684,6 +1690,9 @@ def main():
             turno_refuerzo = st.selectbox("Turno requerido", ["M", "T", "N", "M+T", "T+N"])
             num_tecnicos_extra = st.number_input("Número de técnicos extra requeridos", min_value=1, value=2)
 
+            tecnicos_disponibles = [col for col in df.columns if col not in id_cols]
+            tecnicos_manuales = st.multiselect("Selecciona técnicos específicos para refuerzo (opcional)", tecnicos_disponibles)
+
             if st.button("Asignar Grupo de Refuerzo"):
                 fecha_inicio_str = fecha_inicio.strftime("%d/%m/%Y")
                 df_modificado = aplicar_grupo_refuerzo(
@@ -1691,7 +1700,8 @@ def main():
                     fecha_inicio_str, 
                     dias_refuerzo, 
                     turno_refuerzo, 
-                    num_tecnicos_extra
+                    num_tecnicos_extra,
+                    tecnicos_seleccionados=tecnicos_manuales if tecnicos_manuales else None
                 )
                 st.session_state.df_turnos = df_modificado
                 guardar_calendario_local(st.session_state.df_turnos, st.session_state.df_parejas)

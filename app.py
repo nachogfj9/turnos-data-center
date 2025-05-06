@@ -396,6 +396,15 @@ def generar_calendario_anual_grupos(file, anio=2025, num_bloques=2, penalizar_re
     current_day = 0  # contador de días para asignar
     
     for bloque_idx in range(num_bloques):
+        if bloque_idx > 0:
+            ultimos_turnos_previos = {
+                tecnico: df_turnos_anual.loc[current_day - 1, tecnico]
+                for tecnico in df_ponderado["Nombre"]
+                if tecnico in df_turnos_anual.columns
+            }
+        else:
+            ultimos_turnos_previos = {}
+
         # Añadir un día extra si quedan días adicionales por repartir
         current_block_days = dias_por_bloque + (1 if bloque_idx < dias_extra else 0)
         
@@ -413,6 +422,17 @@ def generar_calendario_anual_grupos(file, anio=2025, num_bloques=2, penalizar_re
         # Asignar turnos para cada grupo
         for idx, row in df_grupos.iterrows():
             tecnicos_grupo = [t for t in row["Tecnicos"] if "dummy" not in str(t)]
+            # Buscar patrones válidos que NO empiecen con "M" si algún técnico venía de "N" o "T+N"
+            evitar_m = any(
+                clean_shift(ultimos_turnos_previos.get(t, "")) in ["N", "T+N"]
+                for t in tecnicos_grupo
+            )
+            for patron_idx in range(len(config["shift_patterns"])):
+                primer_turno = config["shift_patterns"][patron_idx][0]
+                if evitar_m and primer_turno == "M":
+                    continue  # saltar patrones que empiecen por mañana si venían de noche
+                else:
+                    break  # primer patrón válido encontrado
             if not tecnicos_grupo:
                 continue
             turnos_diarios = []

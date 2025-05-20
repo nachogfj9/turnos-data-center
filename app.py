@@ -1198,9 +1198,8 @@ def mostrar_parejas_en_cards_por_bloque(df_grupos):
                             st.markdown(f"""
                                 <div style="background-color: white; border: 2px solid #FF4B00;
                                             border-radius: 10px; padding: 20px; margin-bottom: 10px;">
-                                    <h4 style="color:#FF4B00; margin-top:0;">Grupo óptimo</h4>
-                                    <p><strong>Técnico 1:</strong> {tecnicos[0]}</p>
-                                    <p><strong>Técnico 2:</strong> {tecnicos[1]}</p>
+                                    <h4 style="color:#FF4B00; margin-top:0;">Grupo de {len(tecnicos)} técnicos</h4>
+                                    {''.join([f"<p><strong>Técnico {i+1}:</strong> {tec}</p>" for i, tec in enumerate(tecnicos)])}
                                     <ul>
                                         <li><strong>Complementariedad:</strong> {coverage_score:.0f}%</li>
                                         <li><strong>Conocimiento común:</strong> {overlap_score:.0f}%</li>

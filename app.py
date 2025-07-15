@@ -72,20 +72,20 @@ def get_config():
 ###############################################################################
 # 1. FUNCIONES DE CARGA/GUARDADO LOCAL
 ###############################################################################
-def get_user_folder():
-    user = st.session_state.get("user", "default")
-    folder = f"data_{user}"
+def get_contract_folder():
+    pep = st.session_state.get("pep", "default")
+    folder = f"data_{pep}"
     os.makedirs(folder, exist_ok=True)
     return folder
 
 def guardar_calendario_local(df_turnos, df_grupos):
-    folder = get_user_folder()
+    folder = get_contract_folder()
     df_turnos.to_csv(os.path.join(folder, "calendario_turnos.csv"), index=False)
     df_grupos["Tecnicos"] = df_grupos["Tecnicos"].apply(str)
     df_grupos.to_csv(os.path.join(folder, "calendario_parejas.csv"), index=False)
 
 def cargar_calendario_local():
-    folder = get_user_folder()
+    folder = get_contract_folder()
     file_turnos = os.path.join(folder, "calendario_turnos.csv")
     file_parejas = os.path.join(folder, "calendario_parejas.csv")
     if os.path.exists(file_turnos) and os.path.exists(file_parejas):
@@ -1369,11 +1369,9 @@ def configuraciones_avanzadas_tab():
 # 9. LOGIN 
 ###############################################################################
 import streamlit as st
-import hashlib
 import os
-import json
 import base64
-import auth_custom as auth
+import auth as auth
 
 ###############################################################################
 # 9. STREAMLIT APP PRINCIPAL
@@ -1381,7 +1379,6 @@ import auth_custom as auth
 def main():
     init_config()
     config = get_config()
-    auth.auth_gate(config)
  
     st.set_page_config(page_title="Guaxen", layout="wide")
     st.markdown(
@@ -1393,8 +1390,8 @@ def main():
     unsafe_allow_html=True
 )
     init_config()
-    config = get_config()
-    auth.auth_gate(config)
+
+    auth.auth_gate()
     st.markdown("""
     <style>
     body { background-color: #FFF5F0; }
@@ -1412,12 +1409,11 @@ def main():
     .stButton button:hover { background-color: #FF6A2A; border: 1px solid #FF6A2A; }
     </style>
     """, unsafe_allow_html=True)
-    if "user" in st.session_state:
-        st.sidebar.write(f"👤 {st.session_state['user']}")
-        if st.sidebar.button("Cerrar sesión"):
-            auth.logout()
-        with st.sidebar.expander("🔁 Cambiar contraseña"):
-            auth.cambiar_password()
+
+    if "usuario" not in st.session_state or "pep" not in st.session_state:
+        st.stop()  # Esto detiene toda la ejecución aquí
+    if st.sidebar.button("Cerrar sesión"):
+        auth.logout()
     init_config()
     config = get_config()
     if config["logo_path"] and os.path.exists(config["logo_path"]):
@@ -1490,7 +1486,7 @@ def main():
     with tabs[1]:
         st.header("Calendario y Bajas")
         if st.button("Forzar recálculo"):
-            folder = get_user_folder()
+            folder = get_contract_folder()
             try:
                 os.remove(os.path.join(folder, "calendario_turnos.csv"))
             except FileNotFoundError:
@@ -1716,33 +1712,6 @@ def main():
     with tabs[3]:
         configuraciones_avanzadas_tab()
 
-    st.markdown("""
-    <style>
-    .creator {
-        position: fixed;
-        bottom: 15px;
-        right: 15px;
-        background-color: #FF4B00;
-        color: white;
-        padding: 0.75rem 1.25rem;
-        border-radius: 12px;
-        box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.15);
-        z-index: 9999;
-        font-size: 0.95rem;
-        line-height: 1.4;
-    }
-    .creator a {
-        color: white;
-        text-decoration: underline;
-    }
-    </style>
-
-    <div class="creator">
-        <p>Creado por: <strong>Jose Ignacio Guajardo-Fajardo Jiménez</strong></p>
-        <p>Email: <a href="mailto:nachogfj@gmail.com" style="color: white;">nachogfj@gmail.com</a></p>
-        <p>LinkedIn: <a href="https://www.linkedin.com/in/joseignacioguajardo-fajardojiménez/" target="_blank" style="color: white;">Jose Ignacio Guajardo-Fajardo Jiménez</a></p>
-    </div>
-    """, unsafe_allow_html=True)
 
 
 def calcular_distribucion_optima(num_tecnicos):

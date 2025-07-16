@@ -10,6 +10,7 @@ from PIL import Image
 from collections import defaultdict
 import itertools
 import ast  
+st.set_page_config(page_title="Guaxen", layout="wide")
 
 ###############################################################################
 # CONFIGURACIONES POR DEFECTO
@@ -1379,8 +1380,7 @@ import auth as auth
 def main():
     init_config()
     config = get_config()
- 
-    st.set_page_config(page_title="Guaxen", layout="wide")
+
     st.markdown(
     """
     <script>

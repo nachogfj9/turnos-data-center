@@ -1,9 +1,37 @@
 import streamlit as st
 import pandas as pd
 import os
+st.markdown(
+    """
+    <style>
+    .block-container {
+        padding-top: 4rem;
+        padding-bottom: 4rem;
+        background-color: #fef4ef;
+        min-height: 100vh;
+    }
+
+    .stTextInput > div > div > input {
+        background-color: #f7f9fc;
+    }
+
+    button[kind="primary"] {
+        background-color: #ff4b00;
+        color: white;
+    }
+
+    .stApp {
+        background-color: #fef4ef;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 
 USUARIOS_CSV = os.path.join("Data", "usuarios.csv")
 CONTRATOS_CSV = os.path.join("Data", "contratos.csv")
+
 
 def auth_gate():
     if "usuario" in st.session_state and "pep" in st.session_state:
@@ -37,6 +65,6 @@ def auth_gate():
 
 
 def logout():
-    for key in ["usuario", "Pep"]:
+    for key in ["usuario", "pep"]:
         st.session_state.pop(key, None)
     st.rerun()

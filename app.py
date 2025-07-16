@@ -79,22 +79,35 @@ def get_contract_folder():
     os.makedirs(folder, exist_ok=True)
     return folder
 
-def guardar_calendario_local(df_turnos, df_grupos):
-    folder = get_contract_folder()
+def guardar_calendario_local(df_turnos, df_parejas):
+    pep = st.session_state.get("pep")
+    if not pep:
+        return
+
+    folder = f"data_{pep}"
+    os.makedirs(folder, exist_ok=True)
+
     df_turnos.to_csv(os.path.join(folder, "calendario_turnos.csv"), index=False)
-    df_grupos["Tecnicos"] = df_grupos["Tecnicos"].apply(str)
-    df_grupos.to_csv(os.path.join(folder, "calendario_parejas.csv"), index=False)
+    df_parejas.to_csv(os.path.join(folder, "calendario_parejas.csv"), index=False)
+
 
 def cargar_calendario_local():
-    folder = get_contract_folder()
-    file_turnos = os.path.join(folder, "calendario_turnos.csv")
-    file_parejas = os.path.join(folder, "calendario_parejas.csv")
-    if os.path.exists(file_turnos) and os.path.exists(file_parejas):
-        df_turnos = pd.read_csv(file_turnos, parse_dates=["Fecha"])
-        df_grupos = pd.read_csv(file_parejas)
-        df_grupos["Tecnicos"] = df_grupos["Tecnicos"].apply(lambda x: ast.literal_eval(x))
-        return df_turnos, df_grupos
-    return None, None
+    pep = st.session_state.get("pep")
+    if not pep:
+        return None, None
+
+    folder = f"data_{pep}"
+
+    ruta_turnos = os.path.join(folder, "calendario_turnos.csv")
+    ruta_parejas = os.path.join(folder, "calendario_parejas.csv")
+
+    if os.path.exists(ruta_turnos) and os.path.exists(ruta_parejas):
+        df_turnos = pd.read_csv(ruta_turnos, parse_dates=["Fecha"])
+        df_parejas = pd.read_csv(ruta_parejas)
+        return df_turnos, df_parejas
+    else:
+        return None, None
+
 
 ###############################################################################
 # 2. FUNCIONES DE CÁLCULO DE CALENDARIO Y MATRIZ DE HABILIDADES
@@ -1414,6 +1427,15 @@ def main():
         st.stop()  # Esto detiene toda la ejecución aquí
     if st.sidebar.button("Cerrar sesión"):
         auth.logout()
+    if "pep" in st.session_state:
+        st.markdown(
+            f"""
+            <div style='background-color: #fff3e0; padding: 1rem; border-left: 5px solid #ff4b00; margin-bottom: 1rem;'>
+                <strong>📁 Contrato activo:</strong> {st.session_state["pep"]}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
     init_config()
     config = get_config()
     if config["logo_path"] and os.path.exists(config["logo_path"]):

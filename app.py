@@ -1428,14 +1428,27 @@ def main():
     if st.sidebar.button("Cerrar sesión"):
         auth.logout()
     if "pep" in st.session_state:
+        pep = st.session_state["pep"]
+        contrato_nombre = pep  # Valor por defecto
+        from auth import CONTRATOS_CSV
+
+        # Cargar el nombre del contrato si existe el CSV
+        if os.path.exists(CONTRATOS_CSV):
+            df_contratos = pd.read_csv(CONTRATOS_CSV)
+            df_contratos.columns = df_contratos.columns.str.strip().str.lower()
+            contrato = df_contratos[df_contratos["pep"].astype(str).str.strip() == pep.strip()]
+            if not contrato.empty:
+                contrato_nombre = contrato.iloc[0]["contrato"]
+
         st.markdown(
             f"""
             <div style='background-color: #fff3e0; padding: 1rem; border-left: 5px solid #ff4b00; margin-bottom: 1rem;'>
-                <strong>📁 Contrato activo:</strong> {st.session_state["pep"]}
+                <strong>📁 {contrato_nombre}
             </div>
             """,
             unsafe_allow_html=True
         )
+
     init_config()
     config = get_config()
     if config["logo_path"] and os.path.exists(config["logo_path"]):

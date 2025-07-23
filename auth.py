@@ -56,7 +56,7 @@ def auth_gate():
         return
 
     st.title("🔐 Inicia sesión con tu expediente")
-    expediente_input = st.text_input("Expediente", placeholder="Ej: a04943")
+    expediente_input = st.text_input("Expediente", placeholder="Ej: a85732")
 
     if expediente_input:
         df_usuarios, df_contratos = cargar_datos()

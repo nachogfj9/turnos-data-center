@@ -74,33 +74,27 @@ def get_config():
 # 1. FUNCIONES DE CARGA/GUARDADO LOCAL
 ###############################################################################
 def get_contract_folder():
-    pep = st.session_state.get("pep", "default")
-    folder = f"data_{pep}"
+    contrato = st.session_state.get("contrato_nombre", "default")
+    folder = f"data_{contrato}"
     os.makedirs(folder, exist_ok=True)
     return folder
 
 def guardar_calendario_local(df_turnos, df_parejas):
-    pep = st.session_state.get("pep")
-    if not pep:
+    contrato = st.session_state.get("contrato_nombre")
+    if not contrato:
         return
-
-    folder = f"data_{pep}"
+    folder = f"data_{contrato}"
     os.makedirs(folder, exist_ok=True)
-
     df_turnos.to_csv(os.path.join(folder, "calendario_turnos.csv"), index=False)
     df_parejas.to_csv(os.path.join(folder, "calendario_parejas.csv"), index=False)
 
-
 def cargar_calendario_local():
-    pep = st.session_state.get("pep")
-    if not pep:
+    contrato = st.session_state.get("contrato_nombre")
+    if not contrato:
         return None, None
-
-    folder = f"data_{pep}"
-
+    folder = f"data_{contrato}"
     ruta_turnos = os.path.join(folder, "calendario_turnos.csv")
     ruta_parejas = os.path.join(folder, "calendario_parejas.csv")
-
     if os.path.exists(ruta_turnos) and os.path.exists(ruta_parejas):
         df_turnos = pd.read_csv(ruta_turnos, parse_dates=["Fecha"])
         df_parejas = pd.read_csv(ruta_parejas)

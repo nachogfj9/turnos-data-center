@@ -16,8 +16,8 @@ st.set_page_config(page_title="Guaxen", layout="wide")
 # CONFIGURACIONES POR DEFECTO
 ###############################################################################
 DEFAULT_CONFIG = {
-    "logo_path": r"C:/Users/a04943/OneDrive - Serveo/Documentos/TFM/turnos_data_center/Serveo_logo.png",
-    "template_file": "MatPol_Plantilla.xlsx",
+    "logo_path": os.path.join("assets", "Serveo_logo.png"),
+    "template_file": os.path.join("assets", "MatPol_Plantilla.xlsx"),
     "max_hours_year": 1750,
     "repeated_pairs_penalty": 999999,
     "shift_patterns": [
@@ -68,7 +68,12 @@ def init_config():
         st.session_state["CONFIG"] = DEFAULT_CONFIG.copy()
 
 def get_config():
-    return st.session_state["CONFIG"]
+    # Mezcla: defaults → sobreescribidos por lo que haya en sesión
+    cfg = DEFAULT_CONFIG.copy()
+    cfg.update(st.session_state.get("CONFIG", {}))
+    st.session_state["CONFIG"] = cfg
+    return cfg
+
 
 ###############################################################################
 # 1. FUNCIONES DE CARGA/GUARDADO LOCAL
@@ -1379,7 +1384,7 @@ def configuraciones_avanzadas_tab():
 import streamlit as st
 import os
 import base64
-import auth as auth
+from src import auth as auth
 
 ###############################################################################
 # 9. STREAMLIT APP PRINCIPAL
@@ -1424,7 +1429,7 @@ def main():
     if "pep" in st.session_state:
         pep = st.session_state["pep"]
         contrato_nombre = pep  # Valor por defecto
-        from auth import CONTRATOS_CSV
+        from src.auth import CONTRATOS_CSV
 
         # Cargar el nombre del contrato si existe el CSV
         if os.path.exists(CONTRATOS_CSV):

@@ -78,9 +78,17 @@ def get_config():
 ###############################################################################
 # 1. FUNCIONES DE CARGA/GUARDADO LOCAL
 ###############################################################################
-def get_contract_folder():
+DATA_ROOT = "Data"
+
+def _sanitize(name: str) -> str:
+    """Convierte el nombre del contrato en algo seguro para carpeta."""
+    name = str(name).strip()
+    return "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in name)
+
+def get_contract_folder() -> str:
     contrato = st.session_state.get("contrato_nombre", "default")
-    folder = f"data_{contrato}"
+    safe_name = _sanitize(contrato)
+    folder = os.path.join(DATA_ROOT, f"data_{safe_name}")
     os.makedirs(folder, exist_ok=True)
     return folder
 
@@ -88,24 +96,42 @@ def guardar_calendario_local(df_turnos, df_parejas):
     contrato = st.session_state.get("contrato_nombre")
     if not contrato:
         return
-    folder = f"data_{contrato}"
-    os.makedirs(folder, exist_ok=True)
+    folder = get_contract_folder()
     df_turnos.to_csv(os.path.join(folder, "calendario_turnos.csv"), index=False)
     df_parejas.to_csv(os.path.join(folder, "calendario_parejas.csv"), index=False)
 
 def cargar_calendario_local():
+    """Intenta primero en Data/, y si no existe, hace fallback a la ruta antigua para compatibilidad."""
     contrato = st.session_state.get("contrato_nombre")
     if not contrato:
         return None, None
-    folder = f"data_{contrato}"
+
+    # Nueva ruta (dentro de Data/)
+    folder = get_contract_folder()
     ruta_turnos = os.path.join(folder, "calendario_turnos.csv")
     ruta_parejas = os.path.join(folder, "calendario_parejas.csv")
+
+    # Fallback a la ruta legacy (misma carpeta que app.py)
+    legacy_folder = f"data_{_sanitize(contrato)}"
+    legacy_turnos = os.path.join(legacy_folder, "calendario_turnos.csv")
+    legacy_parejas = os.path.join(legacy_folder, "calendario_parejas.csv")
+
     if os.path.exists(ruta_turnos) and os.path.exists(ruta_parejas):
         df_turnos = pd.read_csv(ruta_turnos, parse_dates=["Fecha"])
         df_parejas = pd.read_csv(ruta_parejas)
         return df_turnos, df_parejas
+    elif os.path.exists(legacy_turnos) and os.path.exists(legacy_parejas):
+        # Opcional: migra automáticamente a Data/
+        os.makedirs(folder, exist_ok=True)
+        df_turnos = pd.read_csv(legacy_turnos, parse_dates=["Fecha"])
+        df_parejas = pd.read_csv(legacy_parejas)
+        # Guarda en nueva ubicación
+        df_turnos.to_csv(ruta_turnos, index=False)
+        df_parejas.to_csv(ruta_parejas, index=False)
+        return df_turnos, df_parejas
     else:
         return None, None
+
 
 
 ###############################################################################
